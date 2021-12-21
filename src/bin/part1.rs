@@ -1,12 +1,7 @@
 #![feature(int_abs_diff)]
 
 use itertools::Itertools;
-use std::{
-    cmp::{max, min},
-    env,
-    fs::File,
-    io::Read,
-};
+use std::{env, fs::File, io::Read};
 
 struct SevenSegDecoder {}
 
@@ -25,24 +20,22 @@ impl SevenSegDecoder {
 
 #[derive(Debug)]
 struct Puzzle<'a> {
-    inputs: Vec<&'a str>,
     outputs: Vec<&'a str>,
 }
 
 impl<'a> Puzzle<'a> {
     fn new(line: &'a str) -> Puzzle<'a> {
-        let (ins, outs) = line.split('|').collect_tuple().expect("missing pipe");
-        let inputs = ins.split_whitespace().collect_vec();
+        let (_ins, outs) = line.split('|').collect_tuple().expect("missing pipe");
         let outputs = outs.split_whitespace().collect_vec();
 
-        Puzzle { inputs, outputs }
+        Puzzle { outputs }
     }
 
     // count how many 1, 4, 7, 8 in the outputs
     fn solve(&self) -> usize {
         let mut total: usize = 0;
         for code in &self.outputs {
-            if let Some(n) = SevenSegDecoder::decode(code) {
+            if let Some(_) = SevenSegDecoder::decode(code) {
                 total += 1;
             }
         }
@@ -61,7 +54,7 @@ fn main() {
     fh.read_to_string(&mut contents)
         .expect("Could not read the input file");
 
-    let mut items = contents.lines();
+    let items = contents.lines();
 
     let puzzles: Vec<Puzzle> = items.map(|line| Puzzle::new(line)).collect();
 

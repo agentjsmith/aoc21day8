@@ -1,7 +1,6 @@
 #![feature(int_abs_diff)]
 #![feature(let_else)]
 
-use core::num;
 use itertools::Itertools;
 use std::{
     collections::{HashMap, HashSet},
@@ -34,19 +33,6 @@ enum Digit {
 }
 
 impl Digit {
-    fn eliminate(&mut self, candidate: &u8) {
-        use Digit::*;
-        match self {
-            Decided(_) => return,
-            Undecided(candidates) => {
-                candidates.remove(candidate);
-                if candidates.len() == 1 {
-                    let answer = candidates.iter().next().expect("ended up with nothing");
-                    *self = Decided(*answer);
-                }
-            }
-        }
-    }
     fn is_decided(&self) -> bool {
         use Digit::*;
         match self {
@@ -57,7 +43,6 @@ impl Digit {
 }
 #[derive(Debug)]
 struct SevenSegDecoder {
-    segments: HashMap<char, Segment>,
     digits: HashMap<String, Digit>,
 }
 
@@ -157,7 +142,7 @@ impl SevenSegDecoder {
             }
         }
 
-        SevenSegDecoder { segments, digits }
+        SevenSegDecoder { digits }
     }
 
     fn sort_chars(str: &mut String) {
@@ -344,7 +329,7 @@ fn main() {
     fh.read_to_string(&mut contents)
         .expect("Could not read the input file");
 
-    let mut items = contents.lines();
+    let items = contents.lines();
 
     let puzzles: Vec<Puzzle> = items.map(|line| Puzzle::new(line)).collect();
 
