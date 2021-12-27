@@ -10,7 +10,7 @@ pub struct SevenSegDecoder {
 
 // Convention: lowercase letters are scrambled inputs, capitals are decoded outputs
 impl SevenSegDecoder {
-    pub fn new(inputs: &Vec<&str>) -> SevenSegDecoder {
+    pub fn new(inputs: &[&str]) -> SevenSegDecoder {
         let mut segments: HashMap<char, Segment> = HashMap::new(); // map of input "wire" to possible output "segment"
         let mut digits: HashMap<String, Digit> = HashMap::new(); // map of input strings to possible output digits
 
@@ -52,9 +52,9 @@ impl SevenSegDecoder {
                    panic!("at the disco");
                };
                 let plausible_clear_strings: HashSet<String> =
-                    Self::all_possibilities(&cipher_string, &segments);
+                    Self::all_possibilities(cipher_string, &segments);
                 let valid_digit_strings: Vec<String> = plausible_digits
-                    .into_iter()
+                    .iter()
                     .map(|n| Self::digit_to_segments(*n))
                     .map(|h| Self::hashset_to_str(&h))
                     .collect();
@@ -79,14 +79,14 @@ impl SevenSegDecoder {
                         .expect("this had better not fail");
 
                     Self::update_segments(
-                        &Self::str_to_hashset(&cipher_string),
+                        &Self::str_to_hashset(cipher_string),
                         real_digit,
                         &mut segments,
                     );
-                    let key = (&**cipher_string.clone()).to_string();
+                    let key = (&(**cipher_string).clone()).to_string();
                     digits.insert(key, Digit::Decided(real_digit));
 
-                    println!("{} is {}!", cipher_string, real_digit);
+                    // println!("{} is {}!", cipher_string, real_digit);
 
                     found.push(*cipher_string);
                 }
@@ -115,7 +115,7 @@ impl SevenSegDecoder {
     }
 
     // Expand a ciphertext into every possible cleartext given the wiring that is known so far
-    fn all_possibilities(cipher: &String, segments: &HashMap<char, Segment>) -> HashSet<String> {
+    fn all_possibilities(cipher: &str, segments: &HashMap<char, Segment>) -> HashSet<String> {
         let mut tmpvec: Vec<String> = vec!["".to_string()];
 
         for cipher_char in cipher.chars() {
@@ -158,7 +158,7 @@ impl SevenSegDecoder {
 
         // Code characters that are "ON" can not be clear characters that are "OFF"
         for code in code_segments_on {
-            let s: &mut Segment = segments.get_mut(&code).expect("done goofed");
+            let s: &mut Segment = segments.get_mut(code).expect("done goofed");
             for c in &clear_segments_off {
                 s.eliminate(c);
             }
@@ -182,7 +182,7 @@ impl SevenSegDecoder {
             ['a', 'b', 'c', 'd', 'e', 'f', 'g'].into()
         };
 
-        all_segments.difference(&input).map(|&x| x).collect()
+        all_segments.difference(input).copied().collect()
     }
 
     fn segments_to_digit(hs: &HashSet<char>) -> Option<u8> {

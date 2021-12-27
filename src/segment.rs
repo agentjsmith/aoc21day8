@@ -16,3 +16,9 @@ impl Segment {
         self.candidates.remove(candidate);
     }
 }
+
+impl Default for Segment {
+    fn default() -> Self {
+        Self::new()
+    }
+}

@@ -66,7 +66,7 @@ fn main() {
         .expect("Could not read the input file");
 
     // The filter_map's cause these loops to ignore any invalid puzzles.  Diagnostics are be produced elsewhere.
-    let puzzles = contents.lines().filter_map(|line| Puzzle::new(line));
+    let puzzles = contents.lines().filter_map(Puzzle::new);
     let total: usize = puzzles.filter_map(|puz| puz.solve()).sum();
 
     println!("{} total", total);
