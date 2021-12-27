@@ -5,11 +5,7 @@ pub mod segment;
 pub mod sevensegdecoder;
 
 use itertools::Itertools;
-use std::{
-    env,
-    fs::File,
-    io::Read,
-};
+use std::{env, fs::File, io::Read};
 
 #[derive(Debug)]
 struct Puzzle<'a> {
@@ -19,7 +15,10 @@ struct Puzzle<'a> {
 
 impl<'a> Puzzle<'a> {
     fn new(line: &'a str) -> Puzzle<'a> {
-        let (ins, outs) = line.split('|').collect_tuple().expect("input line missing pipe");
+        let (ins, outs) = line
+            .split('|')
+            .collect_tuple()
+            .expect("input line missing pipe");
         let inputs = ins.split_whitespace().collect_vec();
         let outputs = outs.split_whitespace().collect_vec();
 
@@ -28,11 +27,7 @@ impl<'a> Puzzle<'a> {
 
     fn solve(&self) -> usize {
         let ssd = sevensegdecoder::SevenSegDecoder::new(&self.inputs);
-        let digits: Vec<u8> = self
-            .outputs
-            .iter()
-            .filter_map(|d| ssd.decode(d))
-            .collect();
+        let digits: Vec<u8> = self.outputs.iter().filter_map(|d| ssd.decode(d)).collect();
         digits.iter().fold(0, |acc, &dig| acc * 10 + dig as usize)
     }
 }

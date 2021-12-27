@@ -1,7 +1,7 @@
-use std::collections::{HashMap, HashSet};
-use itertools::Itertools;
 use super::digit::Digit;
 use super::segment::Segment;
+use itertools::Itertools;
+use std::collections::{HashMap, HashSet};
 
 #[derive(Debug)]
 pub struct SevenSegDecoder {
