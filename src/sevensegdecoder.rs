@@ -1,56 +1,18 @@
-#![feature(int_abs_diff)]
-#![feature(let_else)]
-
+use std::collections::{HashMap, HashSet};
 use itertools::Itertools;
-use std::{
-    collections::{HashMap, HashSet},
-    env,
-    fs::File,
-    io::Read,
-};
+use super::digit::Digit;
+use super::segment::Segment;
 
 #[derive(Debug)]
-struct Segment {
-    candidates: HashSet<char>,
-}
-
-impl Segment {
-    fn new() -> Segment {
-        Segment {
-            candidates: ['A', 'B', 'C', 'D', 'E', 'F', 'G'].into(),
-        }
-    }
-
-    fn eliminate(&mut self, candidate: &char) {
-        self.candidates.remove(candidate);
-    }
-}
-
-#[derive(Debug, Clone)]
-enum Digit {
-    Decided(u8),
-    Undecided(HashSet<u8>),
-}
-
-impl Digit {
-    fn is_decided(&self) -> bool {
-        use Digit::*;
-        match self {
-            Decided(_) => true,
-            Undecided(_) => false,
-        }
-    }
-}
-#[derive(Debug)]
-struct SevenSegDecoder {
+pub struct SevenSegDecoder {
     digits: HashMap<String, Digit>,
 }
 
 // Convention: lowercase letters are scrambled inputs, capitals are decoded outputs
 impl SevenSegDecoder {
-    fn new(inputs: &Vec<&str>) -> SevenSegDecoder {
-        let mut segments: HashMap<char, Segment> = HashMap::new();
-        let mut digits: HashMap<String, Digit> = HashMap::new();
+    pub fn new(inputs: &Vec<&str>) -> SevenSegDecoder {
+        let mut segments: HashMap<char, Segment> = HashMap::new(); // map of input "wire" to possible output "segment"
+        let mut digits: HashMap<String, Digit> = HashMap::new(); // map of input strings to possible output digits
 
         for seg in ['a', 'b', 'c', 'd', 'e', 'f', 'g'] {
             segments.insert(seg, Segment::new());
@@ -61,7 +23,7 @@ impl SevenSegDecoder {
 
         // First use the digits of known length to rule out as many implausible mappings as possible
         for i in inp {
-            let input: HashSet<char> = i.chars().collect();
+            let input: HashSet<char> = Self::str_to_hashset(i);
 
             let dig = Self::lookup_digits(&input);
 
@@ -262,8 +224,9 @@ impl SevenSegDecoder {
             7 => "ACF",
             8 => "ABCDEFG",
             9 => "ABCDFG",
-            _ => panic!("illegal digit"),
+            _ => panic!("Internal error: invalid digit in digit_to_segs"),
         };
+
         SevenSegDecoder::str_to_hashset(s)
     }
 
@@ -276,11 +239,11 @@ impl SevenSegDecoder {
             5 => Undecided([2, 3, 5].into()),
             6 => Undecided([0, 6, 9].into()),
             7 => Decided(8),
-            _ => panic!("implausible input string"),
+            _ => Invalid,
         }
     }
 
-    fn decode(&self, code: &str) -> Option<u8> {
+    pub fn decode(&self, code: &str) -> Option<u8> {
         // roundtrip through conversions to sort the inputs
         let tmp_hs = Self::str_to_hashset(code);
         let sorted_code = Self::hashset_to_str(&tmp_hs);
@@ -291,49 +254,4 @@ impl SevenSegDecoder {
             None
         }
     }
-}
-
-#[derive(Debug)]
-struct Puzzle<'a> {
-    inputs: Vec<&'a str>,
-    outputs: Vec<&'a str>,
-}
-
-impl<'a> Puzzle<'a> {
-    fn new(line: &'a str) -> Puzzle<'a> {
-        let (ins, outs) = line.split('|').collect_tuple().expect("missing pipe");
-        let inputs = ins.split_whitespace().collect_vec();
-        let outputs = outs.split_whitespace().collect_vec();
-
-        Puzzle { inputs, outputs }
-    }
-
-    fn solve(&self) -> usize {
-        let ssd = SevenSegDecoder::new(&self.inputs);
-        let digits: Vec<u8> = self
-            .outputs
-            .iter()
-            .map(|d| ssd.decode(d).unwrap())
-            .collect();
-        digits.iter().fold(0, |acc, &dig| acc * 10 + dig as usize)
-    }
-}
-
-fn main() {
-    let args: Vec<String> = env::args().collect();
-    let inputfile = &args[1];
-
-    let mut fh = File::open(inputfile).expect("Could not open the input file");
-
-    let mut contents = String::new();
-    fh.read_to_string(&mut contents)
-        .expect("Could not read the input file");
-
-    let items = contents.lines();
-
-    let puzzles: Vec<Puzzle> = items.map(|line| Puzzle::new(line)).collect();
-
-    let total: usize = puzzles.iter().map(|puz| puz.solve()).sum();
-
-    println!("{} total", total);
 }
