@@ -36,13 +36,13 @@ fn main() {
     let args: Vec<String> = env::args().collect();
 
     // This program takes one required parameter: the name of a file containing input
-    let Some(inputfile) = &args.get(1) else {
+    let Some(input_file) = &args.get(1) else {
         println!("Hey!  An argument is required.");
         println!("Usage: {} input.txt",&args[0]);
         std::process::exit(1);
     };
 
-    let mut fh = File::open(inputfile).expect("Could not open the input file");
+    let mut fh = File::open(input_file).expect("Could not open the input file");
 
     let mut contents = String::new();
     fh.read_to_string(&mut contents)

@@ -36,7 +36,7 @@ impl SevenSegDecoder {
             digits.insert(sr, dig);
         }
 
-        // Then grind through the digits that are still unknown and eliminate implausible possiblities from the list until all are solved
+        // Then grind through the digits that are still unknown and eliminate implausible possibilities from the list until all are solved
         let cooler_digits = digits.clone();
         let mut undecided: HashSet<&String> = cooler_digits
             .iter()
@@ -55,7 +55,7 @@ impl SevenSegDecoder {
                     Self::all_possibilities(&cipher_string, &segments);
                 let valid_digit_strings: Vec<String> = plausible_digits
                     .into_iter()
-                    .map(|n| Self::digit_to_segs(*n))
+                    .map(|n| Self::digit_to_segments(*n))
                     .map(|h| Self::hashset_to_str(&h))
                     .collect();
 
@@ -75,7 +75,7 @@ impl SevenSegDecoder {
                         .into_iter()
                         .next()
                         .expect("don't worry");
-                    let real_digit = Self::segs_to_digit(&Self::str_to_hashset(&clear_string))
+                    let real_digit = Self::segments_to_digit(&Self::str_to_hashset(&clear_string))
                         .expect("this had better not fail");
 
                     Self::update_segments(
@@ -148,44 +148,44 @@ impl SevenSegDecoder {
     }
 
     fn update_segments(
-        code_segs_on: &HashSet<char>,
+        code_segments_on: &HashSet<char>,
         digit: u8,
         segments: &mut HashMap<char, Segment>,
     ) {
-        let code_segs_off = SevenSegDecoder::invert_segs(code_segs_on);
-        let clear_segs_on = SevenSegDecoder::digit_to_segs(digit);
-        let clear_segs_off = SevenSegDecoder::invert_segs(&clear_segs_on);
+        let code_segments_off = SevenSegDecoder::invert_segments(code_segments_on);
+        let clear_segments_on = SevenSegDecoder::digit_to_segments(digit);
+        let clear_segments_off = SevenSegDecoder::invert_segments(&clear_segments_on);
 
         // Code characters that are "ON" can not be clear characters that are "OFF"
-        for code in code_segs_on {
+        for code in code_segments_on {
             let s: &mut Segment = segments.get_mut(&code).expect("done goofed");
-            for c in &clear_segs_off {
+            for c in &clear_segments_off {
                 s.eliminate(c);
             }
         }
 
         // Code characters that are "OFF" can not be clear characters that are "ON"
-        for code in code_segs_off {
+        for code in code_segments_off {
             let s: &mut Segment = segments.get_mut(&code).expect("goofed again");
-            for c in &clear_segs_on {
+            for c in &clear_segments_on {
                 s.eliminate(c);
             }
         }
     }
 
-    fn invert_segs(input: &HashSet<char>) -> HashSet<char> {
+    fn invert_segments(input: &HashSet<char>) -> HashSet<char> {
         let uppercase = input.iter().next().unwrap_or(&' ').is_uppercase();
 
-        let all_segs: HashSet<char> = if uppercase {
+        let all_segments: HashSet<char> = if uppercase {
             ['A', 'B', 'C', 'D', 'E', 'F', 'G'].into()
         } else {
             ['a', 'b', 'c', 'd', 'e', 'f', 'g'].into()
         };
 
-        all_segs.difference(&input).map(|&x| x).collect()
+        all_segments.difference(&input).map(|&x| x).collect()
     }
 
-    fn segs_to_digit(hs: &HashSet<char>) -> Option<u8> {
+    fn segments_to_digit(hs: &HashSet<char>) -> Option<u8> {
         let s = SevenSegDecoder::hashset_to_str(hs);
         let sr: &str = &s;
 
@@ -212,7 +212,7 @@ impl SevenSegDecoder {
         hs.iter().sorted_unstable().collect::<String>()
     }
 
-    fn digit_to_segs(dig: u8) -> HashSet<char> {
+    fn digit_to_segments(dig: u8) -> HashSet<char> {
         let s = match dig {
             0 => "ABCEFG",
             1 => "CF",
@@ -224,7 +224,7 @@ impl SevenSegDecoder {
             7 => "ACF",
             8 => "ABCDEFG",
             9 => "ABCDFG",
-            _ => panic!("Internal error: invalid digit in digit_to_segs"),
+            _ => panic!("Internal error: invalid digit in digit_to_segments"),
         };
 
         SevenSegDecoder::str_to_hashset(s)
