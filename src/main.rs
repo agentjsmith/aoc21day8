@@ -14,21 +14,38 @@ struct Puzzle<'a> {
 }
 
 impl<'a> Puzzle<'a> {
-    fn new(line: &'a str) -> Puzzle<'a> {
-        let (ins, outs) = line
+    fn new(line: &'a str) -> Option<Puzzle<'a>> {
+        if let Some( (ins, outs) ) = line
             .split('|')
-            .collect_tuple()
-            .expect("input line missing pipe");
-        let inputs = ins.split_whitespace().collect_vec();
-        let outputs = outs.split_whitespace().collect_vec();
+            .collect_tuple() {
 
-        Puzzle { inputs, outputs }
+            let inputs = ins.split_whitespace().collect_vec();
+            let outputs = outs.split_whitespace().collect_vec();
+
+            Some(Puzzle { inputs, outputs })
+        } else {
+            println!("Input Error: Puzzle string lacks a pipe separator:\n{}",line);
+            None
+        }
     }
 
-    fn solve(&self) -> usize {
+    fn solve(&self) -> Option<usize> {
         let ssd = sevensegdecoder::SevenSegDecoder::new(&self.inputs);
-        let digits: Vec<u8> = self.outputs.iter().filter_map(|d| ssd.decode(d)).collect();
-        digits.iter().fold(0, |acc, &dig| acc * 10 + dig as usize)
+
+        // attempt to translate all given output codes...
+        let digits: Vec<Option<u8>> = self.outputs.iter().map(|d| ssd.decode(d)).collect();
+
+        // if any failed to decode, fail the entire puzzle
+        if digits.iter().any(|d| d.is_none() ) {
+            println!("Input Error: At least one given output failed to decode");
+            println!("     Decoder was {:?}",ssd);
+            println!("     Output codes were {:?}",self.outputs);
+
+            None
+        } else {
+            // unwrap will not panic because we already checked for None
+            Some( digits.iter().fold(0, |acc, &dig| acc * 10 + dig.unwrap() as usize) )
+        }
     }
 }
 
@@ -48,9 +65,9 @@ fn main() {
     fh.read_to_string(&mut contents)
         .expect("Could not read the input file");
 
-    let puzzles = contents.lines().map(|line| Puzzle::new(line));
-
-    let total: usize = puzzles.map(|puz| puz.solve()).sum();
+    // The filter_map's cause these loops to ignore any invalid puzzles.  Diagnostics are be produced elsewhere.
+    let puzzles = contents.lines().filter_map(|line| Puzzle::new(line));
+    let total: usize = puzzles.filter_map(|puz| puz.solve()).sum();
 
     println!("{} total", total);
 }
