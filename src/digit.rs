@@ -8,11 +8,11 @@ pub enum Digit {
 }
 
 impl Digit {
-    pub fn is_decided(&self) -> bool {
+    pub fn is_undecided(&self) -> bool {
         use Digit::*;
         match self {
-            Decided(_) => true,
-            Undecided(_) => false,
+            Undecided(_) => true,
+            Decided(_) => false,
             Invalid => false,
         }
     }

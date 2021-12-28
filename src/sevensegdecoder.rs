@@ -40,7 +40,7 @@ impl SevenSegDecoder {
         let cooler_digits = digits.clone();
         let mut undecided: HashSet<&String> = cooler_digits
             .iter()
-            .filter_map(|(key, d)| if !d.is_decided() { Some(key) } else { None })
+            .filter_map(|(key, d)| if d.is_undecided() { Some(key) } else { None })
             .collect();
         let mut num_undecided = undecided.len();
 
@@ -48,8 +48,9 @@ impl SevenSegDecoder {
             let mut found: Vec<&String> = Vec::new();
             for cipher_string in &undecided {
                 // all combinations of cleartext characters that haven't been ruled out yet
-                let Digit::Undecided(plausible_digits) = digits.get(*cipher_string).expect("it's ok") else {
-                   panic!("at the disco");
+                let Digit::Undecided(plausible_digits) = digits.get(*cipher_string)
+                   .expect("undecided is a subset of digits; this can't fail") else {
+                   unreachable!() // only Undecided() variants are in the list
                };
                 let plausible_clear_strings: HashSet<String> =
                     Self::all_possibilities(cipher_string, &segments);
@@ -74,9 +75,11 @@ impl SevenSegDecoder {
                     let clear_string = matching_digit_strings
                         .into_iter()
                         .next()
-                        .expect("don't worry");
+                        .expect("length is 1 in this branch, next() will not fail");
                     let real_digit = Self::segments_to_digit(&Self::str_to_hashset(&clear_string))
-                        .expect("this had better not fail");
+                        .expect(
+                            "this set of segments has already been identified as a valid digit",
+                        );
 
                     Self::update_segments(
                         &Self::str_to_hashset(cipher_string),
@@ -122,7 +125,7 @@ impl SevenSegDecoder {
             let mut newvec: Vec<String> = Vec::new();
             let candidates: Vec<&char> = segments
                 .get(&cipher_char)
-                .expect("won't fail")
+                .expect("invalid cipher characters will be caught by input validation")
                 .candidates
                 .iter()
                 .collect();
@@ -157,16 +160,18 @@ impl SevenSegDecoder {
         let clear_segments_off = SevenSegDecoder::invert_segments(&clear_segments_on);
 
         // Code characters that are "ON" can not be clear characters that are "OFF"
+        // unwrap is ok because input validation will reject invalid input characters
         for code in code_segments_on {
-            let s: &mut Segment = segments.get_mut(code).expect("done goofed");
+            let s: &mut Segment = segments.get_mut(code).unwrap();
             for c in &clear_segments_off {
                 s.eliminate(c);
             }
         }
 
         // Code characters that are "OFF" can not be clear characters that are "ON"
+        // unwrap is ok because input validation will reject invalid input characters
         for code in code_segments_off {
-            let s: &mut Segment = segments.get_mut(&code).expect("goofed again");
+            let s: &mut Segment = segments.get_mut(&code).unwrap();
             for c in &clear_segments_on {
                 s.eliminate(c);
             }
